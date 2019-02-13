@@ -1,17 +1,17 @@
 package monopoly.modele.cases;
 
+import monopoly.modele.Jeu;
 import monopoly.modele.Joueur;
 
 public class Case_AllerEnPrison extends Case {
-    Case prison;
-    public Case_AllerEnPrison(Case suivante, Case prison) {
+    public Case_AllerEnPrison(Case suivante) {
         super("Allez en prison !", suivante);
-        this.prison = prison;
     }
 
     @Override
     public void action(Joueur j) {
-        j.getPion().setPosition(prison);
+        j.allerEnPrison();
+        Jeu.getInstance().getControleurJeuMessage().afficherMessage("Prison", "Vous allez en prison...");
     }
 
     @Override

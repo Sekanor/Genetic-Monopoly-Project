@@ -1,7 +1,12 @@
 package monopoly.modele;
 
+import javafx.beans.property.SimpleStringProperty;
+import monopoly.controleur.ControleurCaseJoueur;
+import monopoly.controleur.ControleurDeplacementPion;
 import monopoly.modele.cases.Case;
 import monopoly.modele.cases.ECase;
+
+import java.util.Objects;
 
 /**
  * Représente le pion du joueur, donc sa position sur la map.
@@ -15,7 +20,7 @@ public class Pion {
     /**
      * Nom du pion.
      */
-    private String nom;
+    private SimpleStringProperty nom;
 
     /**
      * Joueur à qui le pion appartient.
@@ -28,13 +33,23 @@ public class Pion {
     private boolean caseDepartLast;
 
     /**
+     * Contrôleur gérant le déplacement du pion.
+     */
+    private ControleurDeplacementPion controleurDeplacement;
+
+    /**
+     * Contrôleur du panel de case actuelle, indiquant la dernière case atteinte.
+     */
+    private ControleurCaseJoueur controleurCaseJoueur;
+
+    /**
      * Permet de créer un nouveau pion
      * @param position Position de base du pion.
      * @param nom Nom du pion.
      */
     public Pion(Case position, String nom) {
         this.position = position;
-        this.nom = nom;
+        this.nom = new SimpleStringProperty(nom);
         caseDepartLast = false;
     }
 
@@ -43,8 +58,23 @@ public class Pion {
      * @param nom Nom du pion.
      */
     public Pion(String nom) {
-        this.nom = nom;
+        this.nom = new SimpleStringProperty(nom);
         this.position = Jeu.getInstance().getPlateau().getCaseDepart();
+    }
+
+    /**
+     * Permet de créer un pion sans position
+     * @param nom Nom du pion
+     * @param sansCase Vrai si le pion ne doit pas avoir de position. Doit être initialisée ensuite.
+     */
+    public Pion(String nom, boolean sansCase) {
+        this.nom = new SimpleStringProperty(nom);
+        if(sansCase) {
+            this.position = null;
+        }
+        else {
+            this.position = Jeu.getInstance().getPlateau().getCaseDepart();
+        }
     }
 
     /**
@@ -58,6 +88,7 @@ public class Pion {
         }
 
         position.action(getJoueur());
+        this.appelerControleurs();
     }
 
     /**
@@ -71,6 +102,7 @@ public class Pion {
         }
 
         position.action(getJoueur());
+        this.appelerControleurs();
     }
 
     /**
@@ -84,6 +116,7 @@ public class Pion {
         }
 
         position.action(getJoueur());
+        this.appelerControleurs();
     }
 
     /**
@@ -97,6 +130,7 @@ public class Pion {
         }
 
         position.action(getJoueur());
+        this.appelerControleurs();
     }
 
     /**
@@ -108,6 +142,7 @@ public class Pion {
         if(declencheDepart && position.getType() == ECase.Depart) {
             position.action(getJoueur());
         }
+        this.controleurDeplacement.deplacer();
     }
 
     /**
@@ -119,6 +154,12 @@ public class Pion {
         if(declencheDepart && position.getType() == ECase.Depart) {
             position.action(getJoueur());
         }
+        this.controleurDeplacement.deplacer();
+    }
+
+    private void appelerControleurs() {
+        this.controleurDeplacement.deplacer();
+        this.controleurCaseJoueur.actualiserCase();
     }
 
     /**
@@ -134,6 +175,15 @@ public class Pion {
      * @param position Case sur laquelle on souhaite poser le pion.
      */
     public void setPosition(Case position) {
+        this.position = position;
+        this.controleurDeplacement.deplacer();
+    }
+
+    /**
+     * Permet de déplacer le pion sur une case différente sans déclencher le contrôleur.
+     * @param position Case sur laquelle on souhaite poser le pion.
+     */
+    public void setPositionSansVue(Case position) {
         this.position = position;
     }
 
@@ -157,7 +207,7 @@ public class Pion {
      * @return Nom du pion.
      */
     public String getNom() {
-        return nom;
+        return nom.get();
     }
 
     /**
@@ -176,9 +226,64 @@ public class Pion {
         this.joueur = joueur;
     }
 
+    /**
+     * Getter du contrôleur de déplacement.
+     * @return Contrôleur de déplacement.
+     */
+    public ControleurDeplacementPion getControleur() {
+        return controleurDeplacement;
+    }
+
+    /**
+     * Setter du contrôleur de déplacement.
+     * @param controleurDeplacement Contrôleur de déplacement.
+     */
+    public void setControleurDeplacement(ControleurDeplacementPion controleurDeplacement) {
+        this.controleurDeplacement = controleurDeplacement;
+    }
+
+    /**
+     * Accesseur du contrôleur de case actuelle.
+     * @return Contrôleur de case actuelle.
+     */
+    public ControleurCaseJoueur getControleurCaseJoueur() {
+        return controleurCaseJoueur;
+    }
+
+    /**
+     * Mutateur du contrôleur de case actuelle.
+     * @param controleurCaseJoueur Contrôleur de case actuelle.
+     */
+    public void setControleurCaseJoueur(ControleurCaseJoueur controleurCaseJoueur) {
+        this.controleurCaseJoueur = controleurCaseJoueur;
+    }
+
+    /**
+     * Retourne la propriété observable.
+     * @return Propriété observable correspondant au nom.
+     */
+    public SimpleStringProperty getNomProperty() {
+        return nom;
+    }
 
     @Override
     public String toString(){
-        return nom;
+        return getNom();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Pion pion = (Pion) o;
+        return caseDepartLast == pion.caseDepartLast &&
+                Objects.equals(position, pion.position) &&
+                Objects.equals(nom, pion.nom) &&
+                Objects.equals(joueur, pion.joueur);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(position, nom, joueur, caseDepartLast);
     }
 }

@@ -8,11 +8,10 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-
+     
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("menu.fxml"));
-        //root.getChildrenUnmodifiable().addAll(new PanelCase(0.0).getPane());
         primaryStage.setTitle("Monopoly Génétique");
         primaryStage.getIcons().add(new Image("file:src/monopoly/vue/data/image/Icone.png"));
         primaryStage.setScene(new Scene(root, 650, 400));
@@ -20,9 +19,8 @@ public class Main extends Application {
         primaryStage.show();
     }
 
-
     public static void main(String[] args) {
         launch(args);
     }
-    
+   
 }

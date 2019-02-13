@@ -17,6 +17,11 @@ public class Plateau {
     private Case_Depart caseDepart;
 
     /**
+     * Case prison.
+     */
+    private Case_Prison prison;
+
+    /**
      * Créé le plateau.
      */
     public Plateau() {
@@ -25,12 +30,12 @@ public class Plateau {
         caseDepart = new Case_Depart(null);
         listeCases.add(caseDepart);
 
-        CouleurTerrain bleuFinal = new CouleurTerrain(Color.BLUE, 200);
+        CouleurTerrain bleuFinal = new CouleurTerrain(Color.web("0369B3"), 200);
         Case_Terrain rueDeLaPaix = new Case_Terrain("Rue de la paix", bleuFinal, new Tarifs(400,50,200,600,1400,1700,2000),caseDepart);
         listeCases.add(rueDeLaPaix);
 
         Case_Impots taxeDeLuxe = new Case_Impots("Taxe de luxe", 100, rueDeLaPaix);
-        listeCases.add(rueDeLaPaix);
+        listeCases.add(taxeDeLuxe);
 
         Case_Terrain avenueCA = new Case_Terrain("Avenue des Champs-Élysées", bleuFinal, new Tarifs(350, 35, 175, 500, 1100, 1300, 1500), taxeDeLuxe);
         listeCases.add(avenueCA);
@@ -41,7 +46,7 @@ public class Plateau {
         Case_Gare saintLazare = new Case_Gare("Gare Saint-Lazare", c1);
         listeCases.add(saintLazare);
 
-        CouleurTerrain vert = new CouleurTerrain(Color.GREEN, 200);
+        CouleurTerrain vert = new CouleurTerrain(Color.web("1FA54C"), 200);
         Case_Terrain capucines = new Case_Terrain("Boulevard des Capucines", vert, new Tarifs(320,28, 150, 450, 1000, 1200, 1400), saintLazare);
         listeCases.add(capucines);
 
@@ -55,8 +60,8 @@ public class Plateau {
         Case_Terrain breteuil = new Case_Terrain("Avenue de Breteuil", vert, minVert, foch);
         listeCases.add(breteuil);
 
-        CouleurTerrain jaune = new CouleurTerrain(Color.YELLOW, 150);
-        Case_Terrain laFayette = new Case_Terrain("Rue La Fayette", jaune, new Tarifs(280,24, 120, 360, 850, 1020,1200), null);
+        CouleurTerrain jaune = new CouleurTerrain(Color.web("FEED00"), 150);
+        Case_Terrain laFayette = new Case_Terrain("Rue la Fayette", jaune, new Tarifs(280,24, 120, 360, 850, 1020,1200), null);
         listeCases.add(laFayette);
 
         Case_Compagnie compagnieEau = new Case_Compagnie("Compagnie de distribution des eaux", laFayette);
@@ -72,7 +77,7 @@ public class Plateau {
         Case_Gare gareDuNord = new Case_Gare("Gare du Nord" , fsh);
         listeCases.add(gareDuNord);
 
-        CouleurTerrain rouge = new CouleurTerrain(Color.RED, 150);
+        CouleurTerrain rouge = new CouleurTerrain(Color.web("E3010F"), 150);
         Case_Terrain henriMartin = new Case_Terrain("Avenue Henri-Martin", rouge, new Tarifs(240,20,100,300,750,920,1100), gareDuNord);
         listeCases.add(henriMartin);
 
@@ -89,7 +94,7 @@ public class Plateau {
         Case_ParcGratuit parc = new Case_ParcGratuit(matignon);
         listeCases.add(parc);
 
-        CouleurTerrain orange = new CouleurTerrain(Color.ORANGE, 100);
+        CouleurTerrain orange = new CouleurTerrain(Color.web("F49102"), 100);
         Case_Terrain pigalle = new Case_Terrain("Place Pigalle", orange, new Tarifs(200,16,80,220,600,800,1000), parc);
         listeCases.add(pigalle);
 
@@ -106,7 +111,7 @@ public class Plateau {
         Case_Gare lyon = new Case_Gare("Gare de Lyon", mozart);
         listeCases.add(lyon);
 
-        CouleurTerrain violet = new CouleurTerrain(Color.PURPLE, 100);
+        CouleurTerrain violet = new CouleurTerrain(Color.web("D72F87"), 100);
         Case_Terrain paradis = new Case_Terrain("Rue de Paradis", violet, new Tarifs(160, 12,60,180,500,700,900), lyon);
         listeCases.add(paradis);
 
@@ -122,14 +127,14 @@ public class Plateau {
 
         Case_VisitePrison vep = new Case_VisitePrison(vilette);
         listeCases.add(vep);
-        Case_Prison prison = new Case_Prison(vep);
+        prison = new Case_Prison(vep);
         listeCases.add(prison);
-        Case_AllerEnPrison aep = new Case_AllerEnPrison(breteuil, prison);
+        Case_AllerEnPrison aep = new Case_AllerEnPrison(breteuil);
         listeCases.add(aep);
 
         laFayette.setSuivante(aep);
 
-        CouleurTerrain bleuDebut = new CouleurTerrain(Color.CYAN,50);
+        CouleurTerrain bleuDebut = new CouleurTerrain(Color.web("BAE4FA"),50);
         Case_Terrain republique = new Case_Terrain("Avenue de la République", bleuDebut, new Tarifs(120,8,40,100,300,450,600), vep);
         listeCases.add(republique);
 
@@ -149,12 +154,13 @@ public class Plateau {
         Case_Impots revenu = new Case_Impots("Impôts sur le revenu",200, montparnasse);
         listeCases.add(revenu);
 
-        CouleurTerrain marron = new CouleurTerrain(Color.BROWN,50);
+        CouleurTerrain marron = new CouleurTerrain(Color.web("944828"),50);
         Case_Terrain lecourbe = new Case_Terrain("Rue Lecourbe", marron, new Tarifs(60,4,20,60,180,320,450),revenu);
         listeCases.add(lecourbe);
 
         Case_CaisseCommunaute cc3 = new Case_CaisseCommunaute(lecourbe);
         listeCases.add(cc3);
+
 
         Case_Terrain belleville = new Case_Terrain("Boulevard de Belleville", marron, new Tarifs(60,2,10,30,90,160,250), cc3);
         listeCases.add(belleville);
@@ -171,7 +177,7 @@ public class Plateau {
         Case res = null;
 
         for(Case c : listeCases) {
-            if (c.getNom() == nom) {
+            if (c.getId().equals(nom)) {
                 res = c;
             }
         }
@@ -180,10 +186,26 @@ public class Plateau {
     }
 
     /**
+     * Permet de récupérer la prison.
+     * @return Case prison.
+     */
+    public Case_Prison getPrison() {
+        return prison;
+    }
+
+    /**
      * Permet de récupérer la case départ de la map.
      * @return Case départ
      */
     public Case_Depart getCaseDepart() {
         return caseDepart;
+    }
+
+    /**
+     * Permet de récupérer la liste des cases.
+     * @return La liste des cases du plateau
+     */
+    public ArrayList<Case> getListeCases() {
+        return listeCases;
     }
 }

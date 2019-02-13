@@ -62,6 +62,22 @@ public abstract class Case {
     }
 
     /**
+     * Permet d'obtenir l'identifiant de la case. Vaut le nom pour la plupart.
+     * @return Identifiant unique
+     */
+    public String getId() {
+        return getNom();
+    }
+    
+    /**
+     * Permet de savoir si la case a un prix.
+     * @return Vrai si elle en a un.
+     */
+    public boolean aUnPrix() {
+        return false;
+    }
+
+    /**
      * Permet de récupérer la case précédente.
      * @return Case précédente.
      */

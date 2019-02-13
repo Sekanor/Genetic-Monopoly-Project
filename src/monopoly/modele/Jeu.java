@@ -1,16 +1,19 @@
 package monopoly.modele;
 
+import javafx.application.Platform;
+import monopoly.controleur.ControleurPanelInformationsJeu;
+import monopoly.controleur.ControleurJeuMessage;
+import monopoly.controleur.ControleurPanelJoueurs;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Représente le jeu
  * @author Yan BUATOIS
  */
 public class Jeu {
+
     /**
      * Nombre de tours
      */
@@ -27,9 +30,24 @@ public class Jeu {
     private ArrayList<Joueur> joueurs;
 
     /**
+     * Condition de victoire du jeu.
+     */
+    private EConditionVictoire conditionVictoire;
+
+    /**
+     * Nombre de tours ou de minutes que durera la partie.
+     */
+    private int fin;
+
+    /**
      * Joueur dont c'est le tour.
      */
     private Joueur joueurEnCours;
+
+    /**
+     * Vaut vrai si la partie est finie.
+     */
+    private boolean partieFinie;
 
     /**
      * Plateau de jeu
@@ -47,11 +65,52 @@ public class Jeu {
     private GestionnaireCartes gestionnaireCartes;
 
     /**
+     * Timer permettant de compter le temps du jeu.
+     */
+    private Timer timer;
+
+    /**
+     * Chronomètre interne du jeu.
+     */
+    private Chronometre chronometre;
+
+    /**
+     * Contrôleur prenant en charge les informations du jeu sur l'IHM.
+     */
+    private ControleurPanelInformationsJeu controleurPanelInformationsJeu;
+
+    /**
+     * Contrôleur prenant en charge les informations sur le joueur.
+     */
+    private ControleurPanelJoueurs controleurPanelJoueurs;
+
+    /**
+     * Contrôleur se chargeant d'afficher des messages sur le jeu.
+     */
+    private ControleurJeuMessage controleurJeuMessage;
+
+    /**
+     * Argent touché au parc gratuit.
+     */
+    private int argentParcGratuit;
+
+    /**
+     * Vainqueur de la partie.
+     */
+    private Joueur vainqueur;
+
+    // ----------- Methodes -----------
+
+
+    /**
      * Constructeur du jeu, ne prenant pas de paramètres puisqu'il s'agit d'un singleton.
      */
     private Jeu() {
+        argentParcGratuit = 0;
         joueurs = new ArrayList<>();
         des = new Des();
+        conditionVictoire = EConditionVictoire.Faillite;
+        fin = -1;
     }
 
     /**
@@ -108,6 +167,81 @@ public class Jeu {
     }
 
     /**
+     * Permet de définir un joueur aléatoire qui commence.
+     * @return Joueur aléatoire à qui c'est maintenant le tour.
+     */
+    public Joueur setJoueurAleatoire() {
+        ArrayList<Joueur> joueurs = getJoueursRestants();
+        HashMap<Joueur, Integer> joueursScore = new HashMap<>();
+        while(joueurs.size() > 1) {
+            for(Joueur j : joueurs) {
+                joueursScore.put(j, des.lancerTestPremierJoueur());
+            }
+            Collection <Integer> scores = joueursScore.values();
+            int max = 0;
+            for(Integer i : scores) {
+                if(i > max) {
+                    max = i;
+                }
+            }
+
+            for(Joueur j : joueursScore.keySet()) {
+                if(joueursScore.get(j) != max) {
+                    joueurs.remove(j);
+                }
+            }
+
+            joueursScore.clear();
+        }
+
+        joueurEnCours = joueurs.get(0);
+
+        return joueurEnCours;
+    }
+
+    /**
+     * Initialise le timer.
+     */
+    public void initialiserTimer() {
+        /*
+        Cette méthode est séparée de la fonction initialisation()
+        car le chronomètre a besoin du contrôleur d'informations du jeu
+        pour s'initialiser; or ce contrôleur n'existe pas encore dans initialisation().
+
+        Pour comprendre le code de cette méthode, se reférer aux pages suivantes :
+        - https://stackoverflow.com/questions/35512648/adding-a-timer-to-my-program-javafx
+        - https://stackoverflow.com/questions/17850191/why-am-i-getting-java-lang-illegalstateexception-not-on-fx-application-thread
+
+        Dû à l'utilisation de la méthode Platform.runLater, on peut supposer que le timer n'est pas exact,
+        puisque le moment ou run() est exécuté diffère du moment ou run() est appelé, ceci étant dû
+        au fonctionnement des threads.
+
+        Cette méthode pourra éventuellement être recodée avec un AnimationTimer de JavaFX,
+        pour laquelle nous ne pouvons nous heurter à ce type de problèmes.
+        */
+
+        Jeu self = this;
+
+        this.chronometre = new Chronometre();
+        this.timer = new Timer();
+        TimerTask timerTask = new TimerTask() {
+
+            @Override
+            public void run() {
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        self.chronometre.addSeconde();
+                        self.controleurPanelInformationsJeu.actualiser();
+                    }
+                });
+            }
+
+        };
+        this.timer.schedule(timerTask, 1000l,1000l);
+    }
+
+    /**
      * Logique des enchères.
      */
     public void encheres() {
@@ -120,13 +254,6 @@ public class Jeu {
      */
     public int getNbMaxMaisons() {
         return 4;
-    }
-
-    /**
-     * Permet d'initialiser les joueurs.
-     */
-    public void creerJoueurs() {
-        // TODO : Implémenter la création des joueurs
     }
 
     /**
@@ -171,6 +298,14 @@ public class Jeu {
     }
 
     /**
+     * Accesseur du chronomètre.
+     * @return Chronomètre.
+     */
+    public Chronometre getChronometre() {
+        return chronometre;
+    }
+
+    /**
      * Permet de récupérer le joueur dont c'est le tour.
      * @return Joueur dont c'est le tour
      */
@@ -192,6 +327,12 @@ public class Jeu {
     public void prochainJoueur() {
         int nextIndex = (joueurs.indexOf(joueurEnCours) + 1) % joueurs.size();
         setJoueurEnCours(joueurs.get(nextIndex));
+
+        nbTours++;
+        this.controleurPanelInformationsJeu.actualiser();
+        this.joueurEnCours.getPion().getControleurCaseJoueur().actualiserCase();
+
+        this.joueurEnCours.setDejaJoue(false);
     }
 
     /**
@@ -210,6 +351,51 @@ public class Jeu {
         return joueurs;
     }
 
+
+    public void setJoueur(Joueur j,Pion p){
+        j.choisirPion(p);
+        joueurs.add(j);
+    }
+
+    /**
+     * Mutateur du contrôleur d'informations du jeu.
+     * @param controleurPanelInformationsJeu Mutateur du contrôleur d'informations du jeu.
+     */
+    public void setControleurPanelInformationsJeu(ControleurPanelInformationsJeu controleurPanelInformationsJeu) {
+        this.controleurPanelInformationsJeu = controleurPanelInformationsJeu;
+    }
+
+    /**
+     * Mutateur du contrôleur de joueurs.
+     * @param c Contrôleur de joueur.
+     */
+    public void setControleurPanelJoueurs(ControleurPanelJoueurs c) {
+        this.controleurPanelJoueurs = c;
+    }
+
+    /**
+     * Accesseur du contrôleur de messages du jeu.
+     * @return Contrôleur de messages du jeu.
+     */
+    public ControleurJeuMessage getControleurJeuMessage() {
+        return controleurJeuMessage;
+    }
+
+    /**
+     * Mutateur du contrôleur de messages du jeu.
+     * @param controleurJeuMessage Contrôleur de messages du jeu.
+     */
+    public void setControleurJeuMessage(ControleurJeuMessage controleurJeuMessage) {
+        this.controleurJeuMessage = controleurJeuMessage;
+    }
+
+    /**
+     * Accesseur du contrôleur de joueurs.
+     */
+    public ControleurPanelJoueurs getControleurPanelJoueurs() {
+        return this.controleurPanelJoueurs;
+    }
+
     /**
      * Fonction main temporaire de test
      */
@@ -217,6 +403,46 @@ public class Jeu {
         Jeu j = Jeu.getInstance();
         j.run();
     }
+
+    /**
+     * Permet d'initialiser la position des pions.
+     */
+    public void initPositions() {
+        for(Joueur j : joueurs)
+        {
+            Pion p;
+            if((p = j.getPion()) != null) {
+                if(p.getPosition() == null) {
+                    p.setPositionSansVue(plateau.getCaseDepart());
+                }
+            }
+        }
+    }
+
+    /**
+     * Permet de savoir combien d'argent il y a dans le parc gratuit.
+     * @return L'argent contenu dans le parc gratuit
+     */
+    public int getArgentParcGratuit() {
+        return argentParcGratuit;
+    }
+
+    /**
+     * Permet de réinitialiser l'argent qui se trouve dans le parc gratuit.
+     */
+    public void resetArgentParcGratuit() {
+        argentParcGratuit = 0;
+    }
+
+    /**
+     * Permet d'ajouter de l'argent dans le parc gratuit.
+     * @param argent Montant à ajouter.
+     */
+    public void addArgentParcGratuit(int argent) {
+        argentParcGratuit += argent;
+    }
+
+
     public void run() {
         Scanner sc = new Scanner(System.in);
         Jeu j = this;
@@ -247,11 +473,11 @@ public class Jeu {
             j.getJoueurEnCours().getPion().deplacer(j.getDes().sommeDes());
 
             if(j.getJoueurEnCours().getPion().isCaseDepartLast()) {
-                System.out.println("Vous êtes passé par la case départ ! Vous avez reçu " + j.getArgentCaseDepart() + "€. Vous avez donc " + j.getJoueurEnCours().getSolde().getMonnaie() + "€");
+                System.out.println("Vous êtes passé par la case départ ! Vous avez reçu " + j.getArgentCaseDepart() + "$. Vous avez donc " + j.getJoueurEnCours().getSolde().getMonnaie() + "$");
             }
 
             System.out.println("Vous arrivez sur la case " + j.getJoueurEnCours().getPion().getPosition().getNom() + ".");
-            System.out.println("Vous possédez maintenant " + j.getJoueurEnCours().getSolde().getMonnaie() + "€.");
+            System.out.println("Vous possédez maintenant " + j.getJoueurEnCours().getSolde().getMonnaie() + "$.");
 
             if(dbl) {
                 System.out.println(j.getJoueurEnCours().getNom() + " rejoue.");
@@ -269,9 +495,120 @@ public class Jeu {
         } while(continuer);
 
         for(Joueur joueur : j.joueurs) {
-            System.out.println(joueur.getNom() + " a " + joueur.getSolde().getMonnaie() + "€.");
+            System.out.println(joueur.getNom() + " a " + joueur.getSolde().getMonnaie() + "$.");
         }
 
         System.out.println("Merci d'avoir joué !");
+    }
+
+
+    /**
+     * Permet de savoir quelle est la condition de victoire de la partie en cours.
+     * @return Condition de victoire de la partie en cours.
+     */
+    public EConditionVictoire getConditionVictoire() {
+        return conditionVictoire;
+    }
+
+    /**
+     * Permet de définir la condition de victoire de la partie, par défaut, la faillite.
+     * @param conditionVictoire Condition de victoire à définir.
+     */
+    public void setConditionVictoire(EConditionVictoire conditionVictoire) {
+        this.conditionVictoire = conditionVictoire;
+    }
+
+    /**
+     * Permet de savoir quel est la durée de la partie avant la fin programmée (en minutes ou en tours), inuile si c'est la faillite.
+     * @return Durée de la partie.
+     */
+    public int getFin() {
+        return fin;
+    }
+
+    /**
+     * Permet de définir quelle est la durée de la parti en cours, avant la fin programmée (minutes ou tours), inutile si faillite.
+     * @param fin Durée de la partie.
+     */
+    public void setFin(int fin) {
+        this.fin = fin;
+    }
+
+    private void finirPartie() {
+        partieFinie = true;
+        choisirVainqueur();
+    }
+
+    private boolean joueursRestants() {
+        int nbJoueurs = 0;
+        for(Joueur j : joueurs) {
+            if(!j.isFaillite()) {
+                ++nbJoueurs;
+            }
+        }
+
+        return nbJoueurs >= 2;
+    }
+
+    private Joueur choisirVainqueur() {
+        ArrayList<Joueur> joueurs = getJoueursRestants();
+        if(joueurs.size() < 2) {
+            if(joueurs.size() >= 1) {
+                vainqueur = joueurs.get(0);
+            }
+            else {
+                vainqueur = null;
+            }
+        }
+
+        int valeurArgent = -1;
+        Joueur meilleurJoueur = null;
+
+        for(Joueur j : joueurs) {
+            if(j.getValeur() > valeurArgent) {
+                meilleurJoueur = j;
+                valeurArgent = j.getValeur();
+            }
+        }
+
+        vainqueur = meilleurJoueur;
+
+        return vainqueur;
+    }
+
+    private ArrayList<Joueur> getJoueursRestants() {
+        ArrayList<Joueur> joueursRetour = new ArrayList<>();
+        for(Joueur j : joueurs) {
+            if(!j.isFaillite()) {
+                joueursRetour.add(j);
+            }
+        }
+
+        return joueursRetour;
+    }
+
+    /**
+     * Permet de tester si la partie est finie.
+     * @return Définit si la partie est finie.
+     */
+    public boolean isPartieFinie() {
+        if(!partieFinie) {
+            switch(conditionVictoire) {
+                case NbTours:
+                    if(fin > nbTours) {
+                        finirPartie();
+                    }
+                    break;
+                case Temps:
+                    if(chronometre.getMinutes() <= fin) {
+                        finirPartie();
+                    }
+                    break;
+            }
+            if(!joueursRestants()) {
+                finirPartie();
+            }
+        }
+        return partieFinie;
     }
 }

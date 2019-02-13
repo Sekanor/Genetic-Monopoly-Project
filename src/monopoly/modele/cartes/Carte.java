@@ -28,4 +28,23 @@ public abstract class Carte {
     public boolean usageImmediat() {
         return true;
     }
+
+    /**
+     * Permet de  récupérer le texte de la carte.
+     * @return Texte de la carte.
+     */
+    public String getTexte() {
+        return texte;
+    }
+
+    @Override
+    public String toString() {
+        return getTexte();
+    }
+
+    /**
+     * Vaut vrai s'il est inutile d'afficher une boîte de dialogue expliquant l'effet de la carte.
+     * @return Vrai s'il est inutile d'afficher une boîte de dialogue.
+     */
+    public boolean affichageInclus() {return false;}
 }

@@ -47,6 +47,7 @@ public class Solde {
      */
     public void ajouter(int monnaie) {
         this.monnaie += monnaie;
+        Jeu.getInstance().getControleurPanelJoueurs().actualiser();
     }
 
     /**
@@ -55,5 +56,15 @@ public class Solde {
      */
     public void payer(int monnaie) {
         this.monnaie -= monnaie;
+        Jeu.getInstance().getControleurPanelJoueurs().actualiser();
+    }
+
+    /**
+     * Permet au joueur de payer des impôts, qui seront reversés au parc gratuit.
+     * @param monnaie Argent que le joueur doit payer aux impôts.
+     */
+    public void payerImpots(int monnaie) {
+        payer(monnaie);
+        Jeu.getInstance().addArgentParcGratuit(monnaie);
     }
 }
